@@ -1,4 +1,4 @@
-import { Box, HStack, Input, Button, Text } from '@chakra-ui/react';
+import { Box, HStack, Input, Button, Text, keyframes } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { ContactForm, ContactViewProps, ContactUser } from 'src/types/user';
 
@@ -9,9 +9,11 @@ const ContactView = ({currentUser, setCurrentUser, setUsers} : ContactViewProps)
     useEffect(() => {
         if (currentUser !== null) {
             const localUser = JSON.parse(localStorage.getItem(currentUser));
-            console.log(localStorage.getItem(currentUser));
-            console.log(localUser);
+
             setForm(localUser);
+        }
+        else {
+            setForm({firstName: '', lastName: '', emails: []});
         }
     }, [ currentUser ]);
 
@@ -36,6 +38,14 @@ const ContactView = ({currentUser, setCurrentUser, setUsers} : ContactViewProps)
         });
     }
 
+    const deleteContact = (e) => {
+        const contacts = JSON.parse(localStorage.getItem('users'));
+        const newContacts = contacts.filter(contact => contact.key !== currentUser);
+        localStorage.removeItem(currentUser);
+        localStorage.setItem('users', JSON.stringify(newContacts));
+        setCurrentUser(null);
+    }
+
     const addContact = () => {
         if (form.firstName !== '' && form.lastName !== '') {
             const contacts = JSON.parse(localStorage.getItem('users'));
@@ -43,7 +53,7 @@ const ContactView = ({currentUser, setCurrentUser, setUsers} : ContactViewProps)
             const newCurrentUser: ContactUser = { fullName: `${form.firstName} ${form.lastName}`, key};
             if (currentUser !== null) {
                 const currentIndex = contacts.findIndex((e) => e.key === currentUser);
-                localStorage.removeItem(contacts[currentIndex].key);
+                localStorage.removeItem(currentUser);
                 contacts[currentIndex] = newCurrentUser;
             } 
             else {
@@ -85,13 +95,12 @@ const ContactView = ({currentUser, setCurrentUser, setUsers} : ContactViewProps)
 
             <HStack>
                 {currentUser === null ?
-                 <>
-                <Button bg="blue.300" isDisabled={form.firstName === '' || form.lastName === ''} onClick={addContact}>Add New Contact</Button>
-                <Button bg="red.200" onClick={() => setCurrentUser(null)}>Clear Form</Button> </>
+                <Button bg="blue.300" isDisabled={form.firstName === '' || form.lastName === ''} onClick={addContact}>Add Contact</Button>
                 :
                 <>
                  <Button bg="blue.300" isDisabled={localStorage.getItem(currentUser) === JSON.stringify(form) || form.firstName === '' || form.lastName === ''} onClick={addContact}>Save</Button> 
-                 <Button bg="blue.700" onClick={() => setCurrentUser(null)}>Add New Contact</Button>
+                 <Button bg="red.400" onClick={() => setCurrentUser(null)} isDisabled={localStorage.getItem(currentUser) === JSON.stringify(form)}>Cancel</Button>
+                 <Button onClick={deleteContact}>Delete Contact</Button>
                 </>
                 }
                
